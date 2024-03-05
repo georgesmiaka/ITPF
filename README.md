@@ -1,1 +1,1 @@
-# Simple_multivariable_Transformer
+# Simple_Multivariate_Transformer
