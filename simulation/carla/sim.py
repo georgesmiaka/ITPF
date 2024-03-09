@@ -88,7 +88,7 @@ scenario_data = {
         "map_name": "Town05",
         "scene": "randomDriving.scenic",
         "driver": 0,
-        "max_trips": 99,
+        "max_trips": 199,
         "save_data": "output/json"
 }
 
