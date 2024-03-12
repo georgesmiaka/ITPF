@@ -266,3 +266,84 @@ def calculate_metrics(y_true, y_pred):
     print("RMSE:", rmse_val)
     print("MAE:", mae_val)
     print("MAPE (posx):", mape_val)
+
+def windowing(data, chunk_size):
+    # Initialize an empty list to store the grouped time series data
+    grouped_data = []
+    for start in range(0, len(data), chunk_size):
+        end = start + chunk_size
+        # Extract the chunk of data for this group
+        chunk = data.iloc[start:end]
+        # Convert the chunk to a list of lists (each sublist contains heading, posx, posy, posz, etc...)
+        hxyz = chunk.values.tolist()
+        # Append this chunk to the grouped_data list
+        grouped_data.append(hxyz)
+    grouped_data_np = np.array(grouped_data, dtype=float)
+    return grouped_data_np
+
+#If you want to do it in town11 use:
+#center = (390, 700)
+#x_scale = 1/25
+#y_scale = -1/25
+def calculatePosition(x,y):
+    center = (390, 330)
+    #center = (390, 700)
+    x_scale = 1.25
+    y_scale = -1.25
+    return ((x*x_scale+center[0]), (y*y_scale+center[1]))
+
+def plot_pred(observed, future, predicted):
+    img = plt.imread("data/assets/Town05_0.5sqk.jpg")
+    #img = plt.imread("data/assets/Town11_400sqk.png")
+
+    fig, ax = plt.subplots()
+    ax.imshow(img)
+
+    xs = []
+    ys = []
+    fxs = []
+    fys = []
+    pxs = []
+    pys = []
+    
+    for v in observed:
+        (x,y) = calculatePosition(v[0], v[1])
+        xs.append(x)
+        ys.append(y)
+
+    for v in future[:len(predicted)]:
+        (x,y) = calculatePosition(v[0], v[1])
+        fxs.append(x)
+        fys.append(y)
+    
+    for v in predicted:
+        (x,y) = calculatePosition(v[0], v[1])
+        pxs.append(x)
+        pys.append(y)
+
+    plt.scatter(fxs, fys, color="orange", zorder=1)
+    plt.scatter(pxs, pys, color="red", zorder=3)
+    plt.scatter(xs, ys, color="blue", zorder=2)
+    plt.legend(['ActualFuture', 'PredictedFuture', 'Input'])
+    plt.show()
+
+def plot(observed):
+    img = plt.imread("assets/Town05_0.5sqk.jpg")
+    #img = plt.imread("assets/Town11_400sqk.png")
+
+    fig, ax = plt.subplots()
+    ax.imshow(img)
+
+    xs = []
+    ys = []
+    
+    for v in observed:
+        (x,y) = calculatePosition(v[0], v[1])
+        xs.append(x)
+        ys.append(y)
+    
+    marker_on = [xs[0], xs[len(xs)-1]]
+
+    plt.scatter(xs, ys, color="blue", zorder=2)
+    plt.legend(['ActualFuture'])
+    plt.show()

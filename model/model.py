@@ -32,9 +32,9 @@ class PositionalEncoding(torch.nn.Module):
         return self.dropout(x)
 
 
-class TransformerWithPE(torch.nn.Module):
+class SMT(torch.nn.Module):
     def __init__(
-        self, in_dim: int, out_dim: int, embed_dim: int, num_heads: int, num_layers: int
+        self, in_dim: int, out_dim: int, embed_dim: int, num_heads: int, num_layers: int, output_sequence_length: int
     ) -> None:
         """Initializes a transformer model with positional encoding.
 
@@ -57,6 +57,8 @@ class TransformerWithPE(torch.nn.Module):
         )
 
         self.output_layer = torch.nn.Linear(in_features=embed_dim, out_features=out_dim)
+
+        self.output_sequence_length = output_sequence_length
 
         self.transformer = torch.nn.Transformer(
             nhead=num_heads,
@@ -100,7 +102,7 @@ class TransformerWithPE(torch.nn.Module):
 
         return pred
 
-    def infer(self, src: torch.Tensor, tgt_len: int) -> torch.Tensor:
+    def infer(self, src: torch.Tensor) -> torch.Tensor:
         """Runs inference with the model, meaning: predicts future values
         for an unknown sequence.
         For this, iteratively generate the next output token while
@@ -113,9 +115,9 @@ class TransformerWithPE(torch.nn.Module):
         Returns:
             torch.Tensor: inferred sequence
         """
-        output = torch.zeros((src.shape[0], tgt_len + 1, src.shape[2])).to(src.device)
+        output = torch.zeros((src.shape[0], self.output_sequence_length + 1, src.shape[2])).to(src.device)
         output[:, 0] = src[:, -1]
-        for i in range(tgt_len):
+        for i in range(self.output_sequence_length):
             output[:, i + 1] = self.forward(src, output)[:, i]
 
         return output[:, 1:]
