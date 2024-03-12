@@ -37,7 +37,7 @@ from scenic.simulators.carla.misc import get_speed
 
 MAXSTEPS = 240
 fake = faker.Faker()
-RENDER    = False
+RENDER    = True
 
 """
 WEATHER
@@ -88,7 +88,7 @@ scenario_data = {
         "map_name": "Town05",
         "scene": "randomDriving.scenic",
         "driver": 0,
-        "max_trips": 199,
+        "max_trips": 0,
         "save_data": "output/json"
 }
 
