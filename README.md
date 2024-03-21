@@ -1,1 +1,1 @@
-# Simple_Multivariate_Transformer
+# Interpretable Trajectory Prediction Framework
