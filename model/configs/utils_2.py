@@ -85,7 +85,7 @@ def visualize(
 
 
 def split_sequence(
-    sequence: np.ndarray, ratio: float = 0.8
+    sequence: np.ndarray, ratio: float = 0.99
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """Splits a sequence into 2 (3) parts, as is required by our transformer
     model.
@@ -274,6 +274,20 @@ def windowing(data, chunk_size):
         end = start + chunk_size
         # Extract the chunk of data for this group
         chunk = data.iloc[start:end]
+        # Convert the chunk to a list of lists (each sublist contains heading, posx, posy, posz, etc...)
+        hxyz = chunk.values.tolist()
+        # Append this chunk to the grouped_data list
+        grouped_data.append(hxyz)
+    grouped_data_np = np.array(grouped_data, dtype=float)
+    return grouped_data_np
+
+def windowing_array(data, chunk_size):
+    # Initialize an empty list to store the grouped time series data
+    grouped_data = []
+    for start in range(0, len(data), chunk_size):
+        end = start + chunk_size
+        # Extract the chunk of data for this group
+        chunk = data[start:end]
         # Convert the chunk to a list of lists (each sublist contains heading, posx, posy, posz, etc...)
         hxyz = chunk.values.tolist()
         # Append this chunk to the grouped_data list
