@@ -1,3 +1,4 @@
 # data
-/model/data/files
+/forecast/data/files
+/forecast/__pycache__
 /simulation/carla/output
