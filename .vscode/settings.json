@@ -1,6 +1,7 @@
 {
     "python.analysis.extraPaths": [
         "./forecast",
-        "./forecast"
+        "./forecast",
+        "./forecast/configs"
     ]
 }
