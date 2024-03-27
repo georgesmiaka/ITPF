@@ -23,4 +23,12 @@ class BlackBoxWrapper(BlackBox):
         x = X.reshape((X.shape[0], X.shape[1], 1))
         y = self.clf.predict(x)
         return y
+
+## Gaussian process
+## Prediction uncertainity
+## Prediction interval
     
+## Contribution of individual covariate:
+    # - Shapley value
+
+## Partial Dependence - Link function shape
