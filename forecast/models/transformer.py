@@ -36,7 +36,7 @@ class ITPF_Transformer():
             self,
             input_shape,
             output_shape,
-            output_features_nr,
+            output_features_vector,
             head_size,
             num_heads,
             ff_dim,
@@ -56,6 +56,6 @@ class ITPF_Transformer():
             x = layers.Dropout(mlp_dropout)(x)
         
         # output layer
-        outputs = layers.Dense(output_features_nr)(x)
+        outputs = layers.Dense(output_features_vector)(x)
         outputs = layers.Reshape(output_shape)(outputs)
         return keras.Model(inputs, outputs)
