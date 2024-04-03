@@ -11,9 +11,6 @@ class BlackBox:
     def predict(self, X):
         return
 
-    def score(self, X, y):
-        return accuracy_score(y, self.predict(X))
-
     @abstractmethod
     def predict_proba(self, X):
         return
@@ -53,10 +50,6 @@ class BlackBoxWrapper(BlackBox):
     def predict_proba(self, X):
         y = self.clf.predict_proba(X)
         return y
-    
-    def score(self, X, y):
-        score = super().score(X, y)
-        return score
     
     def predict_for_lime(self, X):
         print(X.shape) # Check Lime synthetic data around X
@@ -103,25 +96,26 @@ class ITPFExplainer(Explainer):
 
     Parameters:
     model: model or prediction function of model.
-    data: Data used to initialize the explainers with. 3D shape.
-    test: Data used for explain the model. 2D shape.
+    data_x: Data used to initialize the explainers with. 3D shape.
+    data_y: Data used for explain the model. 2D shape.
     features-names: List of features names.
     class-names: List of the class name to be explained.
     '''
     def __init__(self):
         self.model = None
-        self.data = None
-        self.test = None
+        self.data_x = None
+        self.data_y = None
         self.feature_names = None
         self.class_name = None
 
-    def fit_exp(self, model, data, feature_names, class_names):
+    def fit_exp(self, model, x, y, feature_names, class_names):
         self.model = model
-        self.data = data
+        self.data_x = x
+        self.data_y = y
         self.feature_names = feature_names
         self.class_names = class_names
     
-    def lime(self, y):
+    def lime(self, y, labelId):
         ''' 
         LIME - Lime-tabular - RecurrentTabularExplainer
         An explainer for keras-style recurrent neural networks, where the input shape is (n_samples, n_timesteps, n_features). 
@@ -133,15 +127,15 @@ class ITPFExplainer(Explainer):
         '''
         # Define the explainer
         explainer = lime_tabular.RecurrentTabularExplainer(
-            training_data=self.data,
-            mode="regression",
+            training_data=self.data_x,
+            training_labels=self.data_y,
             feature_names=self.feature_names,
             discretize_continuous=True,
             class_names=self.class_names,
             discretizer='decile'
         )
         # Get the the result
-        exp = explainer.explain_instance(y, self.model.predict_for_lime, num_features=10, labels=(0,))
+        exp = explainer.explain_instance(y, self.model.predict_for_lime, num_features=10, labels=(labelId,))
         exp.show_in_notebook()
         
     
@@ -157,7 +151,7 @@ class ITPFExplainer(Explainer):
         '''
         shap.initjs()
         # Define the explainer
-        explainer = shap.KernelExplainer(model=self.model.predict_for_shap, data=self.data[0], feature_names=self.feature_names)
+        explainer = shap.KernelExplainer(model=self.model.predict_for_shap, data=self.data_x[0], feature_names=self.feature_names)
         # Get shap values
         shap_values = explainer.shap_values(y)
         shap.summary_plot(shap_values, y)
