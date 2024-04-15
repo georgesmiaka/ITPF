@@ -170,7 +170,7 @@ class ITPFExplainer(Explainer):
         std_devs = np.std(original_sequence, axis=0)
 
         # Generate noise
-        perturbation = (std_devs + scale) * (original_sequence[1]) * np.random.randn(*original_sequence.shape)
+        perturbation = (std_devs + scale) * (original_sequence[1])
         
         # Generate the perturbed sample
         perturbed_samples = original_sequence + perturbation
@@ -230,7 +230,9 @@ class ITPFExplainer(Explainer):
         pertubed_samples = self._generate_significantly_perturbed_samples(y)
         return pertubed_samples
 
-
+    def baseline_extra(self, y):
+        pertubed_samples = self._generate_significantly_perturbed_samples(y)
+        return pertubed_samples
     
     def lime(self, y, labelId=0):
         ''' 
@@ -357,7 +359,7 @@ class ITPFExplainer(Explainer):
                 shapley_values[p][feature] = s_value[p]
         return shapley_values
     
-    def shap_multivariate(self, s_values, labelId):
+    def shap_multivariate(self, s_values, labelId=0):
         shap_values = s_values[labelId]  # Your actual Shapley values
         feature_names = self.feature_names
 
