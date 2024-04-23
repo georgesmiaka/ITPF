@@ -1,15 +1,11 @@
 from abc import ABCMeta, abstractmethod
-from sklearn.metrics import accuracy_score
 import numpy as np
-from lime import lime_tabular
-import shap
 from scipy.special import comb
 import math
 import numpy as np
-import itertools
-import sys
 from itertools import product
 import matplotlib.pyplot as plt
+from sklearn.metrics import mean_squared_error
 
 
 class BlackBox:
@@ -24,14 +20,6 @@ class BlackBox:
         return
     
     @abstractmethod
-    def predict_for_lime(self, X):
-        return
-    
-    @abstractmethod
-    def predict_for_shap(self, X):
-        return
-    
-    @abstractmethod
     def predict_2Dto3D(self, X):
         return
     
@@ -40,14 +28,6 @@ class Explainer:
 
     @abstractmethod
     def fit_exp(self, model, data, features_name):
-        return
-    
-    @abstractmethod
-    def lime(self, X):
-        return
-    
-    @abstractmethod
-    def shap(self, X):
         return
     
     @abstractmethod
@@ -60,9 +40,8 @@ class Explainer:
 
 
 class BlackBoxWrapper(BlackBox):
-    def __init__(self, model, isMultivariate=False):
+    def __init__(self, model):
         self.clf = model
-        self.isMultivariate = isMultivariate
 
     def predict(self, X):
         y = self.clf.predict(X)
@@ -72,23 +51,11 @@ class BlackBoxWrapper(BlackBox):
         y = self.clf.predict_proba(X)
         return y
     
-    def predict_for_lime(self, X):
-        print(X.shape) # Check Lime synthetic data around X
-        y = self.predict(X)
-        return y
-    
-    def predict_for_shap(self, X):
-        #y = transform_to_3d(X)
-        y = X.reshape((X.shape[0], X.shape[1], 1))
-        #print(y)
-        x = self.predict(y)
-        return x
-    
     def predict_2Dto3D(self, X):
         y = transform_to_3d(X)
-        print(y.shape)
         x = self.predict(y)
         return x
+    
 ## 
 #   Data wrapper - functions
 ##
@@ -113,10 +80,6 @@ def transform_to_2d(data):
     y = data.reshape(data.shape[0]*data.shape[1], data.shape[2])
     return y
 
-##
-# Global variables
-#
-PRED_SIZE = 1
 
 class ITPFExplainer(Explainer):
     '''
@@ -124,8 +87,8 @@ class ITPFExplainer(Explainer):
 
     Parameters:
     model: model or prediction function of model.
-    data_x: Data used to initialize the explainers with. 3D shape.
-    data_y: Data used for explain the model. 2D shape.
+    data_x: Data used to initialize the explainers with, (3D shape).
+    data_y: Data used to explain the model, (2D shape).
     features-names: List of features names.
     class-names: List of the class name to be explained.
     '''
@@ -148,7 +111,7 @@ class ITPFExplainer(Explainer):
         self.feature_pred_num = feature_pred_nr
     
 
-    def _generate_significantly_perturbed_samples(self, original_sequence, scale=3.5,):
+    def _generate_perturbed_samples(self, original_sequence, scale=3.5,):
         """
         Generates perturbed samples that are significantly different from the original sequence.
         
@@ -177,85 +140,12 @@ class ITPFExplainer(Explainer):
         
         return perturbed_samples
 
-
-    
-    def _generate_pertubed_samples(self, original_sequence, n_samples=0.05, noise_level=100.0):
-        """
-        Generates a dataset of perturbed samples around the original time series data point.
-        
-        Parameters:
-            original_sequence (np.ndarray): The original sequence of shape (timesteps, features),
-                                            e.g., (59, 8).
-            n_samples (int): Number of perturbed samples to generate.
-            noise_level (float): Magnitude of noise to add for perturbation, relative to the
-                                standard deviation of each feature.
-        
-        Returns:
-            np.ndarray: A dataset of perturbed samples of shape (n_samples, timesteps, features).
-        """
-        # Ensure the input is a NumPy array for manipulation
-        original_sequence = np.array(original_sequence)
-        
-        # Calculate the standard deviation of the original sequence
-        std_devs = np.std(original_sequence, axis=0)
-        
-        # Initialize an array to hold the perturbed samples
-        perturbed_samples = np.zeros((n_samples, *original_sequence.shape))
-        
-        # Generate perturbed samples
-        for i in range(n_samples):
-            # Generate random noise
-            noise = np.random.randn(*original_sequence.shape) * std_devs * noise_level
-            
-            # Add noise to the original sequence to create a perturbed sample
-            perturbed_samples[i] = original_sequence + noise
-        
-        return perturbed_samples
     
     def _baseline(self, y):
-        pertubed_samples = self._generate_pertubed_samples(y)
-        mean_pertubed_samples = []
-        mean_pertubed_samples_pred = []
-        
-        # predict on the new sample
-        p = self.model.predict(pertubed_samples)
+        pertubed_samples = self._generate_perturbed_samples(y)
 
-        # Get the mean of the samples and their predictions
-        mean_pertubed_samples = np.mean(pertubed_samples, axis=0)
-        mean_pertubed_samples_pred = np.mean(p, axis=0)
-
-        return mean_pertubed_samples, mean_pertubed_samples_pred
-    
-    def _baseline_extra(self, y):
-        pertubed_samples = self._generate_significantly_perturbed_samples(y)
-        return pertubed_samples
-
-    def baseline_extra(self, y):
-        pertubed_samples = self._generate_significantly_perturbed_samples(y)
         return pertubed_samples
     
-    def lime(self, y, labelId=0):
-        ''' 
-        LIME - Lime-tabular - RecurrentTabularExplainer
-        An explainer for keras-style recurrent neural networks, where the input shape is (n_samples, n_timesteps, n_features). 
-        This class just extends the LimeTabularExplainer class and reshapes the training data and feature names such that they become something like
-        (val1_t1, val1_t2, val1_t3, …, val2_t1, …, valn_tn)
-
-        Parameters:
-        y: The data for getting interpretability. A numpy 2D-array (sample-size, features-number).
-        '''
-        # Define the explainer
-        explainer = lime_tabular.RecurrentTabularExplainer(
-            training_data=self.data_x,
-            training_labels=self.data_y,
-            feature_names=self.feature_names,
-            discretize_continuous=True,
-            class_names=self.class_names,
-            discretizer='decile'
-        )
-        # Get the the result
-        exp = explainer.explain_instance(y, self.model.predict_for_lime, num_features=10, labels=(labelId,))
-        exp.show_in_notebook()
         
     def _compute_weight(self, total_features, subset_size):
         """
@@ -270,23 +160,6 @@ class ITPFExplainer(Explainer):
         """
         return (math.factorial(subset_size - 1) * math.factorial(total_features - subset_size)) / math.factorial(total_features)
    
-
-    def shap(self, y):
-        '''
-        Uses the Kernel SHAP method to explain output of any function.
-        Takes a matrix of samples (# samples x # features) and computes 
-        the output of the model for those samples.
-
-        Parameters:
-        data: The background dataset to use for integrating out features. A numpy 2D-array (sample-size, features-number).
-        y: The data for getting interpretability. A numpy 2D-array (sample-size, features-number).
-        '''
-        shap.initjs()
-        # Define the explainer
-        explainer = shap.KernelExplainer(model=self.model.predict_for_shap, data=self.data_x[0], feature_names=self.feature_names)
-        # Get shap values
-        shap_values = explainer.shap_values(y)
-        shap.summary_plot(shap_values, y)
     
     def _create_mask(self, feature_num):
         mask = np.array(list(product(range(2), repeat=feature_num)))
@@ -299,21 +172,33 @@ class ITPFExplainer(Explainer):
         # create array mask
         mask=self._create_mask(feature_num)
 
-        # configuration and baseline
+        # configuration
         marginal_contribution = []
         average_contribution = []
         data = y
-        baseline_tab = self._baseline_extra(data)
-        n_features = data.shape[1]
+
+        # baseline
+        baseline_tab = self._baseline(data)
+        
+        # compute baseline prediction
         baseline_pred = model.predict_2Dto3D(baseline_tab)
+        # compute y_true
         original_pred = model.predict_2Dto3D(data)
+
+        # reshap prediction 3d to 2d
+        baseline_pred_reshap = transform_to_2d(baseline_pred)
+        original_pred_reshap = transform_to_2d(original_pred)
+
+        # compute RMSEvalue original_pred vs baseline_pres
+        rmse = mean_squared_error(original_pred_reshap, baseline_pred_reshap)
 
         # compute marginal contribution for baseline {feature} - {}
         weight = self._compute_weight(feature_num, 1)
-        pred = weight*(original_pred - baseline_pred)
-        marginal_contribution.append(pred)
-        # compute marginal contribution
 
+        pred = weight*(rmse)
+        marginal_contribution.append(pred)
+
+        # compute marginal contribution for the rest of the combinations
         for item in mask:
             # Initialize arrays as copies of data and baseline_tab
             without_feature = baseline_tab.copy()
@@ -336,31 +221,36 @@ class ITPFExplainer(Explainer):
             # compute marginal contribution
             pred_without_feature = model.predict_2Dto3D(without_feature)
             pred_with_feature = model.predict_2Dto3D(with_feature)
-            pred = weight*(pred_with_feature - pred_without_feature)
+
+            # reshap prediction 3d to 2d
+            pred_without_feature_reshap = transform_to_2d(pred_without_feature)
+            pred_with_feature_reshap = transform_to_2d(pred_with_feature)
+
+            # compute rmse without_feature vs original_pred, rmse with_feature vs original_pred
+            rmse_without_feature = mean_squared_error(original_pred_reshap, pred_without_feature_reshap)
+            rmse_with_feature = mean_squared_error(original_pred_reshap, pred_with_feature_reshap)
+
+            pred = weight*(rmse_with_feature - rmse_without_feature)
             marginal_contribution.append(pred)
         
         # compute the average contribution
-        marginal_contributions1_reshape = np.array([a.reshape(1, -1) for a in marginal_contribution])
-        marginal_contribution_combined = np.vstack(marginal_contributions1_reshape)
-        average_contribution = np.mean(marginal_contribution_combined, axis=0)
+        average_contribution = np.mean(marginal_contribution)
         return average_contribution
     
     def shap_values_multivariate(self, y):
-        # step 1: Get the baseline and configuration
+        # step 1: configuration
         n_features = self.feature_num
-        n_feature_pred = self.feature_pred_num
-        shapley_values = np.zeros((n_feature_pred, n_features))
+        shapley_values = []
+        
         # step 2: Compute the shapeley values for each feature
         for feature in range(n_features):
             s_value = self._value_function(feature, n_features, y, self.model)
-            #print("Feature ", feature, " values: ", s_value)
             # Load values
-            for p in range(n_feature_pred):
-                shapley_values[p][feature] = s_value[p]
+            shapley_values.append(s_value)
         return shapley_values
     
-    def shap_multivariate(self, s_values, labelId=0):
-        shap_values = s_values[labelId]  # Your actual Shapley values
+    def shap_multivariate(self, s_values):
+        shap_values = s_values
         feature_names = self.feature_names
 
         # Determine bar colors based on the sign of the mean Shapley values
