@@ -139,10 +139,35 @@ class ITPFExplainer(Explainer):
         perturbed_samples = original_sequence + perturbation
         
         return perturbed_samples
+    
+    def _perturb_time_series(matrix):
+        # Calculate correlation matrix
+        corr_matrix = np.corrcoef(matrix, rowvar=False)
+        
+        # Initialize perturbation matrix
+        perturbed_matrix = np.copy(matrix)
+        
+        # Iterate over each feature
+        for i in range(matrix.shape[1]):
+            # Find indices of features with high correlation with feature i
+            correlated_features = np.where(np.abs(corr_matrix[i]) > 0.7)[0]
+            
+            # Compute perturbation values based on correlation grade
+            for j in correlated_features:
+                if i != j:
+                    perturbation_factor = corr_matrix[i, j]
+                    perturbed_matrix[:, j] += perturbation_factor * perturbed_matrix[:, i]
+        
+        # Add noise perturbation for features with low correlation
+        for i in range(matrix.shape[1]):
+            if np.abs(corr_matrix[i]).max() <= 0.7:
+                perturbed_matrix[:, i] *= np.mean(perturbed_matrix[:, i])
+        
+        return perturbed_matrix
 
     
     def _baseline(self, y):
-        pertubed_samples = self._generate_perturbed_samples(y)
+        pertubed_samples = self._perturb_time_series(y)
 
         return pertubed_samples
     
