@@ -1,8 +1,8 @@
 from abc import ABCMeta, abstractmethod
-import numpy as np
 from scipy.special import comb
 import math
 import numpy as np
+import pandas as pd
 from itertools import product
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error
@@ -140,9 +140,16 @@ class ITPFExplainer(Explainer):
         
         return perturbed_samples
     
-    def _perturb_time_series(matrix):
-        # Calculate correlation matrix
-        corr_matrix = np.corrcoef(matrix, rowvar=False)
+    def _perturb_time_series(self, matrix):
+
+        # Convert the 2D array to a DataFrame
+        df = pd.DataFrame(matrix)
+        #compute the correlation DataFrame
+        corr_DataFrame = df.corr()
+        # Convert DataFrame to NumPy array
+        corr_matrix = corr_DataFrame.values
+        # Replace NaN values with 0
+        corr_matrix = np.nan_to_num(corr_matrix, nan=0)
         
         # Initialize perturbation matrix
         perturbed_matrix = np.copy(matrix)
@@ -161,7 +168,7 @@ class ITPFExplainer(Explainer):
         # Add noise perturbation for features with low correlation
         for i in range(matrix.shape[1]):
             if np.abs(corr_matrix[i]).max() <= 0.7:
-                perturbed_matrix[:, i] *= np.mean(perturbed_matrix[:, i])
+                perturbed_matrix[:, i] *= (100 + (np.mean(perturbed_matrix[:, i]) * ((matrix.shape[1])/2) * (np.std(perturbed_matrix[:, i]))))
         
         return perturbed_matrix
 
@@ -193,8 +200,10 @@ class ITPFExplainer(Explainer):
     
         return mask
     
-    def _value_function(self, feature, feature_num, y, model):
-        # create array mask
+    
+    def _value_function(self, feature, feature_num, y, pertubed_data, model):
+
+        # create coalition matrix for masking
         mask=self._create_mask(feature_num)
 
         # configuration
@@ -202,8 +211,8 @@ class ITPFExplainer(Explainer):
         average_contribution = []
         data = y
 
-        # baseline
-        baseline_tab = self._baseline(data)
+        # baseline or pertubed data
+        baseline_tab = pertubed_data
         
         # compute baseline prediction
         baseline_pred = model.predict_2Dto3D(baseline_tab)
@@ -264,15 +273,16 @@ class ITPFExplainer(Explainer):
     
     def shap_values_multivariate(self, y):
         # step 1: configuration
+        pertubed_data = self._perturb_time_series(y)
         n_features = self.feature_num
         shapley_values = []
         
         # step 2: Compute the shapeley values for each feature
         for feature in range(n_features):
-            s_value = self._value_function(feature, n_features, y, self.model)
+            s_value = self._value_function(feature, n_features, y, pertubed_data, self.model)
             # Load values
             shapley_values.append(s_value)
-        return shapley_values
+        return shapley_values, pertubed_data
     
     def shap_multivariate(self, s_values):
         shap_values = s_values
