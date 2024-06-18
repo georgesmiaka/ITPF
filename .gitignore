@@ -1,4 +1,4 @@
 # data
-/forecast/data/files
-/forecast/__pycache__
-/simulation/carla/output
+/learning/model_training/data/files
+/learning/model_training/__pycache__
+/learning/data_generation/output
