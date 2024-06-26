@@ -2,4 +2,5 @@
 /learning/model_training/data/files
 /learning/model_training/__pycache__
 /learning/data_generation/output
+/learning/data_generation/__pycache__
 /.vscode
