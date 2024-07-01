@@ -23,7 +23,7 @@ class Simulation:
 
     def run(self, max_trips, save_data_dir):
         scenario_init = scenic.scenarioFromFile(self.scenario.get_scenario_scene(), mode2D=True)
-        print("Scenario pass...")
+        print("Scenario passed...")
         print("Simulator started...")
         trips = 0
 
@@ -33,7 +33,7 @@ class Simulation:
                 if os.path.isfile(path):
                     trips += 1
                     continue
-                print(f"Starting trip: {trips} for scenario: {self.scenario.get_scenario_map_file()}")
+                print(f"Running trip: {trips} for scenario: {self.scenario.get_scenario_map_file()}")
 
                 scenes, _ = scenario_init.generate()
                 weather = self.environment.get_weather(scenes.params["weather"])

@@ -6,13 +6,12 @@ from datetime import datetime
 if __name__ == "__main__":
     # Example: Change these values to run different scenarios and maps
     
-    current_time = datetime.now().strftime("%Y%m%d_%H%M%S") # Create the subdirectory with the current date and time
     map_file = "./scenes/Town05.xodr"
     map_name = "Town05"
-    scene = "./scenes/randomDriving.scenic"
-    max_trips = 2400
-    save_data_dir = "output/train/"+f"ex_{current_time}"
-    render = True
+    scene = "./scenes/activity_t05.scenic"
+    max_trips = 1024
+    save_data_dir = "output/train/activity_t05/"+f"trip"
+    render = False
 
     # Create Scenario
     scenario = Scenario()
