@@ -1,8 +1,8 @@
-# Interpretable Trajectory Prediction Framework (ITPF)
+# Vehicle Trajectory Prediction Framework (VTPF)
 
 ## Overview
 
-**Interpretable Trajectory Prediction Framework (ITPF)** is a research-driven project aimed at predicting the next location of a driver based on their driving history. The focus is to develop models that can accurately forecast future locations using multivariate time series data. The framework tackles critical challenges in car trajectory prediction, such as model selection, data scarcity, validation of simulated data, and providing interpretability for model decisions.
+**Vehicle Trajectory Prediction Framework (ITPF)** is a research-driven project aimed at predicting the next location of a driver based on their driving history. The focus is to develop models that can accurately forecast future locations using multivariate time series data. The framework tackles critical challenges in car trajectory prediction, such as model selection, data scarcity, validation of simulated data, and providing interpretability for model decisions.
 
 ## Features & Input Data
 
