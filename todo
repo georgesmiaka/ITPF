@@ -1,3 +1,0 @@
-Change the forecasting variable so we only consider the position of the car. 
-We are only intrested of predictiong the next serie of localisation. Features should be used (x, y, z, heading, velocity, weather, trip_id, time_index(seconds), date(year-month-day hour-minute)).
-See the following file: file:///home/ab000840/Downloads/Choi_Yeo_Kim_2018_TRR_trajectory_prediction_RNN.pdf
