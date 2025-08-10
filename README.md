@@ -58,4 +58,4 @@ The output of the framework is the **next series of localizations** (next x, y, 
 
 ## Conclusion
 
-The **Interpretable Trajectory Prediction Framework (ITPF)** aims to provide an effective, interpretable solution for predicting a driver’s next location using multivariate time series data. By leveraging simulation tools for data generation, selecting appropriate predictive models, and focusing on interpretability, the framework seeks to contribute to research in trajectory prediction while addressing the challenges of data scarcity and validation.
+The **Vehicle Trajectory Prediction Framework (ITPF)** aims to provide an effective, interpretable solution for predicting a driver’s next location using multivariate time series data. By leveraging simulation tools for data generation, selecting appropriate predictive models, and focusing on interpretability, the framework seeks to contribute to research in trajectory prediction while addressing the challenges of data scarcity and validation.
